@@ -42,6 +42,35 @@ void ANinja::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	PEI->BindAction(InputMove, ETriggerEvent::Triggered, this, &ANinja::Move);
 }
 
+//void ANinja::Move(const FInputActionValue& Value)
+//{
+//	if (Controller != nullptr) {
+//		// Get location and rotation data
+//		const FVector2D MoveValue = Value.Get<FVector2D>();
+//		FVector Location = GetActorLocation();
+//		UE_LOG(LogTemp, Warning, TEXT("Location: %f"), Location.X);
+//
+//		// if impacting the move forawrd key, move the ship in the forward direction of where it's facing
+//		if (MoveValue.X != 0.0f) {
+//			UE_LOG(LogTemp, Warning, TEXT("Should move"));
+//			Location.X += MoveValue.X * 5;
+//			SetActorLocation(Location);
+//			/*Location += GetActorForwardVector() * MoveValue.X * 5;
+//			SetActorLocation(Location);*/
+//		}
+//	}
+//}
+
 void ANinja::Move(const FInputActionValue& Value)
 {
+	if (Controller != nullptr)
+	{
+		const FVector2D MoveValue = Value.Get<FVector2D>();
+		if (MoveValue.X != 0.0f)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Adding movement input: %f"), MoveValue.X);
+			AddMovementInput(FVector::RightVector, MoveValue.X); // For 2D movement along X-axis
+		}
+	}
 }
+
