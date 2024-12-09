@@ -6,6 +6,8 @@
 #include "PaperCharacter.h"
 #include "InputAction.h"
 #include "InputActionValue.h"
+#include "Components/BoxComponent.h"
+#include "PaperFlipbookComponent.h"
 #include "Ninja.generated.h"
 
 /**
@@ -27,7 +29,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enhanced Input")
 	class UInputMappingContext* InputMapping;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enhanced Input")
-	UInputAction* InputMove;
+	UInputAction* InputWallClimb;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Climbing")
+	bool bCanClimb = false;
 
 public:
 	// Called every frame
@@ -36,6 +40,21 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	void Move(const FInputActionValue& Value);
+	UFUNCTION()
+	void WallClimb(const FInputActionValue& Value);
+
+	UFUNCTION()
+	void OnClimbHitboxBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
+		const FHitResult& SweepResult);
+
+	UFUNCTION()
+	void OnClimbHitboxEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
+	UFUNCTION()
+	void OnFootHitboxBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
+		const FHitResult& SweepResult);
 
 };

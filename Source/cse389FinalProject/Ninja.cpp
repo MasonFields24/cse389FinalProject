@@ -5,6 +5,8 @@
 #include "InputMappingContext.h"
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
+#include "PaperTileMapComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 ANinja::ANinja()
 {
@@ -15,6 +17,14 @@ ANinja::ANinja()
 void ANinja::BeginPlay()
 {
 	Super::BeginPlay();
+
+	
+	UBoxComponent* ClimbHitbox = Cast<UBoxComponent>(GetDefaultSubobjectByName(TEXT("ClimbHitbox")));
+	ClimbHitbox->OnComponentBeginOverlap.AddDynamic(this, &ANinja::OnClimbHitboxBeginOverlap);
+	ClimbHitbox->OnComponentEndOverlap.AddDynamic(this, &ANinja::OnClimbHitboxEndOverlap);
+
+	UBoxComponent* FootHitbox = Cast<UBoxComponent>(GetDefaultSubobjectByName(TEXT("FootHitbox")));
+	FootHitbox->OnComponentBeginOverlap.AddDynamic(this, &ANinja::OnFootHitboxBeginOverlap);
 }
 
 void ANinja::Tick(float DeltaTime)
@@ -39,38 +49,61 @@ void ANinja::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	// Get the EnhancedInputComponent
 	UEnhancedInputComponent* PEI = Cast<UEnhancedInputComponent>(PlayerInputComponent);
 	// Bind the actions
-	PEI->BindAction(InputMove, ETriggerEvent::Triggered, this, &ANinja::Move);
+	PEI->BindAction(InputWallClimb, ETriggerEvent::Triggered, this, &ANinja::WallClimb);
 }
 
-//void ANinja::Move(const FInputActionValue& Value)
-//{
-//	if (Controller != nullptr) {
-//		// Get location and rotation data
-//		const FVector2D MoveValue = Value.Get<FVector2D>();
-//		FVector Location = GetActorLocation();
-//		UE_LOG(LogTemp, Warning, TEXT("Location: %f"), Location.X);
-//
-//		// if impacting the move forawrd key, move the ship in the forward direction of where it's facing
-//		if (MoveValue.X != 0.0f) {
-//			UE_LOG(LogTemp, Warning, TEXT("Should move"));
-//			Location.X += MoveValue.X * 5;
-//			SetActorLocation(Location);
-//			/*Location += GetActorForwardVector() * MoveValue.X * 5;
-//			SetActorLocation(Location);*/
-//		}
-//	}
-//}
-
-void ANinja::Move(const FInputActionValue& Value)
+void ANinja::WallClimb(const FInputActionValue& Value)
 {
-	if (Controller != nullptr)
+	if (bCanClimb)
 	{
-		const FVector2D MoveValue = Value.Get<FVector2D>();
-		if (MoveValue.X != 0.0f)
+		float ClimbDirection = Value.Get<float>(); // Get input direction (-1 for down, +1 for up)
+		FVector CurrentLocation = GetActorLocation(); // Get the current location of the character
+		float ClimbSpeed = 200.0f; // Adjust for desired climbing speed
+
+		// Calculate the new location based on input direction
+		FVector NewLocation = CurrentLocation + FVector(0.0f, 0.0f, ClimbDirection * ClimbSpeed * GetWorld()->DeltaTimeSeconds);
+
+		// Update the actor's location
+		SetActorLocation(NewLocation);
+
+		if (ClimbDirection > 0)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Adding movement input: %f"), MoveValue.X);
-			AddMovementInput(FVector::RightVector, MoveValue.X); // For 2D movement along X-axis
+			UE_LOG(LogTemp, Warning, TEXT("Climbing Up!"));
+		}
+		else if (ClimbDirection < 0)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Climbing Down!"));
 		}
 	}
 }
 
+void ANinja::OnClimbHitboxBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	// Check if the actor has a UPaperTileMapComponent
+	UPaperTileMapComponent* TileMapComponent = OtherActor->FindComponentByClass<UPaperTileMapComponent>();
+	if (TileMapComponent)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Climbable tileset detected!"));
+		bCanClimb = true;
+		GetCharacterMovement()->SetMovementMode(MOVE_Flying); // Enable Flying mode
+		//GetCharacterMovement()->GravityScale = 0.0f; // Disable gravity
+	}
+}
+
+void ANinja::OnClimbHitboxEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	// Check if the actor has a UPaperTileMapComponent
+	UPaperTileMapComponent* TileMapComponent = OtherActor->FindComponentByClass<UPaperTileMapComponent>();
+	if (TileMapComponent)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Left tileset!"));
+		bCanClimb = false;
+		GetCharacterMovement()->SetMovementMode(MOVE_Walking); // Enable Flying mode
+		//GetCharacterMovement()->GravityScale = 1.0f; // Disable gravity
+	}
+}
+
+void ANinja::OnFootHitboxBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	bCanClimb = false;
+}
