@@ -22,9 +22,6 @@ void ANinja::BeginPlay()
 	UBoxComponent* ClimbHitbox = Cast<UBoxComponent>(GetDefaultSubobjectByName(TEXT("ClimbHitbox")));
 	ClimbHitbox->OnComponentBeginOverlap.AddDynamic(this, &ANinja::OnClimbHitboxBeginOverlap);
 	ClimbHitbox->OnComponentEndOverlap.AddDynamic(this, &ANinja::OnClimbHitboxEndOverlap);
-
-	UBoxComponent* FootHitbox = Cast<UBoxComponent>(GetDefaultSubobjectByName(TEXT("FootHitbox")));
-	FootHitbox->OnComponentBeginOverlap.AddDynamic(this, &ANinja::OnFootHitboxBeginOverlap);
 }
 
 void ANinja::Tick(float DeltaTime)
@@ -56,24 +53,15 @@ void ANinja::WallClimb(const FInputActionValue& Value)
 {
 	if (bCanClimb)
 	{
-		float ClimbDirection = Value.Get<float>(); // Get input direction (-1 for down, +1 for up)
-		FVector CurrentLocation = GetActorLocation(); // Get the current location of the character
-		float ClimbSpeed = 200.0f; // Adjust for desired climbing speed
+		float ClimbDirection = Value.Get<float>();
+		FVector CurrentLocation = GetActorLocation();
+		float ClimbSpeed = 150.0f;
 
 		// Calculate the new location based on input direction
 		FVector NewLocation = CurrentLocation + FVector(0.0f, 0.0f, ClimbDirection * ClimbSpeed * GetWorld()->DeltaTimeSeconds);
 
 		// Update the actor's location
 		SetActorLocation(NewLocation);
-
-		if (ClimbDirection > 0)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("Climbing Up!"));
-		}
-		else if (ClimbDirection < 0)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("Climbing Down!"));
-		}
 	}
 }
 
@@ -83,10 +71,8 @@ void ANinja::OnClimbHitboxBeginOverlap(UPrimitiveComponent* OverlappedComponent,
 	UPaperTileMapComponent* TileMapComponent = OtherActor->FindComponentByClass<UPaperTileMapComponent>();
 	if (TileMapComponent)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Climbable tileset detected!"));
 		bCanClimb = true;
-		GetCharacterMovement()->SetMovementMode(MOVE_Flying); // Enable Flying mode
-		//GetCharacterMovement()->GravityScale = 0.0f; // Disable gravity
+		GetCharacterMovement()->SetMovementMode(MOVE_Flying);
 	}
 }
 
@@ -96,14 +82,7 @@ void ANinja::OnClimbHitboxEndOverlap(UPrimitiveComponent* OverlappedComponent, A
 	UPaperTileMapComponent* TileMapComponent = OtherActor->FindComponentByClass<UPaperTileMapComponent>();
 	if (TileMapComponent)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Left tileset!"));
 		bCanClimb = false;
-		GetCharacterMovement()->SetMovementMode(MOVE_Walking); // Enable Flying mode
-		//GetCharacterMovement()->GravityScale = 1.0f; // Disable gravity
+		GetCharacterMovement()->SetMovementMode(MOVE_Walking);
 	}
-}
-
-void ANinja::OnFootHitboxBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
-{
-	bCanClimb = false;
 }
