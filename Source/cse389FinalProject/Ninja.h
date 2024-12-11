@@ -72,4 +72,7 @@ public:
 	void CheckIsDead();
 	UFUNCTION(BlueprintCallable)
 	bool GetIsDead();
+
+	UFUNCTION(BlueprintCallable)
+	void SetScore(int NewScore);
 };

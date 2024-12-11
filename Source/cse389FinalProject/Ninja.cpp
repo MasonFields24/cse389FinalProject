@@ -110,6 +110,10 @@ int ANinja::GetScore() {
 	return Score;
 }
 
+void ANinja::SetScore(int NewScore) {
+	Score = NewScore;
+}
+
 void ANinja::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
@@ -117,8 +121,13 @@ void ANinja::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* Ot
 	if (!bCanTakeDamage) {
 		return;
 	}
+	// Component
+	FString ComponentName = OtherComp->GetName();
+	// Skeleton body
 	ASkeletonEnemy* Skeleton = Cast<ASkeletonEnemy>(OtherActor);
-	if (Skeleton)
+	
+	// Deal damage if the cast succeeded or we hit the skeleton's PlayerDetector
+	if (Skeleton || ComponentName == "PlayerDetector")
 	{
 		if (!Skeleton->GetIsDead()) {
 			Health -= 1;
