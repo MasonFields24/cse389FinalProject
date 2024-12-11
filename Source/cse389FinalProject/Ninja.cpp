@@ -6,12 +6,19 @@
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
 #include "PaperTileMapComponent.h"
+#include "SkeletonEnemy.h"
+#include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
 ANinja::ANinja()
 {
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+
+	bCanTakeDamage = true;
+	bIsDead = false;
+	// 1.5 second iframes
+	DamageCooldown = 1.5f;
 }
 
 void ANinja::BeginPlay()
@@ -22,6 +29,14 @@ void ANinja::BeginPlay()
 	UBoxComponent* ClimbHitbox = Cast<UBoxComponent>(GetDefaultSubobjectByName(TEXT("ClimbHitbox")));
 	ClimbHitbox->OnComponentBeginOverlap.AddDynamic(this, &ANinja::OnClimbHitboxBeginOverlap);
 	ClimbHitbox->OnComponentEndOverlap.AddDynamic(this, &ANinja::OnClimbHitboxEndOverlap);
+
+	Hitbox = Cast<UBoxComponent>(GetDefaultSubobjectByName(TEXT("Hitbox")));
+	Hitbox->OnComponentBeginOverlap.AddDynamic(this, &ANinja::OnOverlapBegin);
+}
+
+void ANinja::ResetCanTakeDamage()
+{
+	bCanTakeDamage = true;
 }
 
 void ANinja::Tick(float DeltaTime)
@@ -85,4 +100,53 @@ void ANinja::OnClimbHitboxEndOverlap(UPrimitiveComponent* OverlappedComponent, A
 		bCanClimb = false;
 		GetCharacterMovement()->SetMovementMode(MOVE_Walking);
 	}
+}
+
+int ANinja::GetHealth() {
+	return Health;
+}
+
+int ANinja::GetScore() {
+	return Score;
+}
+
+void ANinja::SetScore(int NewScore) {
+	Score = NewScore;
+}
+
+void ANinja::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	// If in iframes, ignore
+	if (!bCanTakeDamage) {
+		return;
+	}
+	// Component
+	FString ComponentName = OtherComp->GetName();
+	// Skeleton body
+	ASkeletonEnemy* Skeleton = Cast<ASkeletonEnemy>(OtherActor);
+	
+	// Deal damage if the cast succeeded or we hit the skeleton's PlayerDetector
+	if (Skeleton || ComponentName == "PlayerDetector")
+	{
+		if (!Skeleton->GetIsDead()) {
+			Health -= 1;
+			bCanTakeDamage = false;
+			GetWorld()->GetTimerManager().SetTimer(
+				DamageCooldownTimerHandle, this, &ANinja::ResetCanTakeDamage, DamageCooldown, false);
+		}
+	}
+
+	CheckIsDead();
+}
+
+void ANinja::CheckIsDead() {
+	if (Health <= 0) {
+		bIsDead = true;
+	}
+}
+
+bool ANinja::GetIsDead()
+{
+	return bIsDead;
 }
