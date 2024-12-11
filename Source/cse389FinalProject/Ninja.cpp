@@ -106,6 +106,10 @@ int ANinja::GetHealth() {
 	return Health;
 }
 
+void ANinja::SetHealth(int NewHealth) {
+	Health = NewHealth;
+}
+
 int ANinja::GetScore() {
 	return Score;
 }
