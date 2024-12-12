@@ -68,9 +68,11 @@ void ANinja::WallClimb(const FInputActionValue& Value)
 {
 	if (bCanClimb)
 	{
+		SetActorLocation(GetActorLocation());
+
 		float ClimbDirection = Value.Get<float>();
 		FVector CurrentLocation = GetActorLocation();
-		float ClimbSpeed = 150.0f;
+		float ClimbSpeed = 100.0f;
 
 		// Calculate the new location based on input direction
 		FVector NewLocation = CurrentLocation + FVector(0.0f, 0.0f, ClimbDirection * ClimbSpeed * GetWorld()->DeltaTimeSeconds);
@@ -104,6 +106,10 @@ void ANinja::OnClimbHitboxEndOverlap(UPrimitiveComponent* OverlappedComponent, A
 
 int ANinja::GetHealth() {
 	return Health;
+}
+
+void ANinja::SetHealth(int newHealth) {
+	Health = newHealth;
 }
 
 int ANinja::GetScore() {

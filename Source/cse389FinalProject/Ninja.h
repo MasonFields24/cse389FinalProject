@@ -32,8 +32,8 @@ protected:
 	UInputAction* InputWallClimb;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Climbing")
 	bool bCanClimb = false;
-	int Health = 3;
-	int Score = 0;
+	int Health = 4;
+	int Score = 100;
 	bool bCanTakeDamage;
 	bool bIsDead;
 	float DamageCooldown;
@@ -75,4 +75,7 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void SetScore(int NewScore);
+
+	UFUNCTION(BlueprintCallable)
+	void SetHealth(int newHealth);
 };
